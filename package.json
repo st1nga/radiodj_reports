@@ -1,0 +1,28 @@
+{
+  "name": "radiodj_reports",
+  "version": "1.0.0",
+  "description": "Reports",
+  "main": "reports.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/st1nga/radiodj_reports.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/st1nga/radiodj_reports/issues"
+  },
+  "homepage": "https://github.com/st1nga/radiodj_reports#readme",
+  "dependencies": {
+    "commander": "^8.1.0",
+    "config": "^3.3.6",
+    "express": "^4.17.1",
+    "mysql": "^2.18.1",
+    "strftime": "^0.10.0",
+    "toml": "^3.0.0",
+    "winston": "^3.3.3"
+  }
+}
