@@ -98,6 +98,58 @@ html = `<div class="bigbox fixed">
 //---------------------------------------------------------------------------
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Tracks we don't play for various reasons
+//---------------------------------------------------------------------------
+function non_players(db) {
+logger.verbose(ln()+"In top_10_tx3")
+
+  sql = `select "disabled" reason, id, artist, title, "" date from songs where enabled != 1
+union
+select "end dated", id, artist, title, end_date from songs where end_date > now()
+union
+select "start dated", id, artist, title,start_date from songs where start_date > now()
+union
+select "Retired", id, s.artist, s.title, se.retire_until from songs s, songs_extra se where s.id = se.song_id and se.retire_until > now()`
+
+  return new Promise((result, reject) => {
+    db.query(sql, (error, rows, cols) => {
+      if (error) {
+        logger.error(ln()+sql);
+        reject(error);
+      } else {
+html = `<div class="bigbox fixed">
+<div id="main_inner" class="fixed">
+<div class='post' align='center'>
+<div class="divTable blueTable">
+<div class="divTableHeading">
+<div class="divTableRow">`
+
+        cols.forEach((d) => {
+          html = html + '<div class="divTableHead">' + d.name + '</div>'
+        })
+        html += '</div></div>'
+        html += `<div class="divTableBody">`
+
+        Object.keys(rows).forEach((key) => {
+          row = rows[key]
+          html += `<div class="divTableRow">
+<div class="divTableCell">${row.reason}</div>
+<div class="divTableCell">${row.id}</div>
+<div class="divTableCell">${row.artist}</div>
+<div class="divTableCell">${row.title}</div>
+<div class="divTableCell">${row.date}</div>
+</div>`
+
+        })
+        result(html)
+      }
+    });
+  });
+
+}
+//---------------------------------------------------------------------------
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Number tracks plays in each decade
 //---------------------------------------------------------------------------
 function decade(db) {
@@ -256,6 +308,26 @@ fastify.get('/top_tracks', (request, reply) => {
   .then(result => {
     header = result
     top_tracks(db)
+    .catch(reject => {
+      throw(reject);
+    })
+    .then(result => {
+      reply
+        .code(200)
+        .header('Content-Type', 'text/html; charset=utf-8')
+        .send(header+result)
+    })
+  })
+})
+
+fastify.get('/non_players', (request, reply) => {
+  get_header()
+  .catch(reject => {
+    throw(reject);
+  })
+  .then(result => {
+    header = result
+    non_players(db)
     .catch(reject => {
       throw(reject);
     })
