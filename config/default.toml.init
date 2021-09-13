@@ -1,0 +1,11 @@
+[sql]
+username = ""
+password = ""
+database = ""
+host = ""
+
+[report]
+logger_name = "radiodj_reports"
+log_file = ""
+listen_host = "0.0.0.0"
+port = 
