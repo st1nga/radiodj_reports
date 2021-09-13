@@ -50,6 +50,43 @@ function get_header() {
 //---------------------------------------------------------------------------
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Turn songID into a clicky link
+//---------------------------------------------------------------------------
+function song_id_2_html(song_id) {
+
+  return `<div class="divTableCell">
+<form target="_blank" action="http://nostromo/cgi/songs.php" method="post">
+<button type="submit" name="song_id" class="btn-link" value="${song_id}">
+<input type="hidden" name="and_or" value="or">
+<input type="hidden" name="ACTION" value="search">
+<input type="hidden" name="search_for_title" value="">
+<input type="hidden" name="search_for_artist" value="">${song_id}
+</button>
+</form>
+</div>`
+}
+//---------------------------------------------------------------------------
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Turn artists into a clicky link
+//---------------------------------------------------------------------------
+function artist_2_html(artist) {
+
+  return `<div class="divTableCell">
+<form target="_blank" action="http://nostromo/cgi/songs.php" method="post">
+<button type="submit" name="search_for_artist" class="btn-link" value="${artist}">
+<input type="hidden" name="and_or" value="or">
+<input type="hidden" name="ACTION" value="search">
+<input type="hidden" name="search_for_title" value="">
+<input type="hidden" name="song_id" value="">
+${artist}
+</button>
+</form>
+</div>`
+}
+//---------------------------------------------------------------------------
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //top 10 played tracks from tx3
 //---------------------------------------------------------------------------
 function top_10_tx3(db) {
@@ -57,7 +94,7 @@ function top_10_tx3(db) {
 
   logger.verbose(ln()+"In top_10_tx3")
 
-  sql = "select songID, title, artist, year, count(*) count from history where date_played < DATE_ADD(CURDATE(), INTERVAL -7 day) and user='tx3' and active and song_type=0 group by songID order by count desc limit 20;"
+  sql = "select songID, artist, title, year, count(*) count from history where date_played < DATE_ADD(CURDATE(), INTERVAL -7 day) and user='tx3' and active and song_type=0 group by songID order by count desc limit 20;"
 
   return new Promise((result, reject) => {
     db.query(sql, (error, rows, cols) => {
@@ -68,6 +105,7 @@ function top_10_tx3(db) {
 html = `<div class="bigbox fixed">
 <div id="main_inner" class="fixed">
 <div class='post' align='center'>
+<h2>Top TX3 tracks in last 7 days</h2>
 <div class="divTable blueTable"> 
 <div class="divTableHeading">
 <div class="divTableRow">`
@@ -80,10 +118,10 @@ html = `<div class="bigbox fixed">
 
         Object.keys(rows).forEach((key) => {
           row = rows[key]
-          html += `<div class="divTableRow">
-<div class="divTableCell">${row.songID}</div>
-<div class="divTableCell">${row.title}</div>
-<div class="divTableCell">${row.artist}</div>
+          html += `<div class="divTableRow">`
+          html += song_id_2_html(row.songID)
+          html += artist_2_html(row.artist)
+          html += `<div class="divTableCell">${row.title}</div>
 <div class="divTableCell">${row.year}</div>
 <div class="divTableCell">${row.count}</div>
 </div>`
@@ -117,9 +155,10 @@ select "Retired", id, s.artist, s.title, se.retire_until from songs s, songs_ext
         logger.error(ln()+sql);
         reject(error);
       } else {
-html = `<div class="bigbox fixed">
+        html = `<div class="bigbox fixed">
 <div id="main_inner" class="fixed">
 <div class='post' align='center'>
+<h2>Non played tracks</h2>
 <div class="divTable blueTable">
 <div class="divTableHeading">
 <div class="divTableRow">`
@@ -133,10 +172,10 @@ html = `<div class="bigbox fixed">
         Object.keys(rows).forEach((key) => {
           row = rows[key]
           html += `<div class="divTableRow">
-<div class="divTableCell">${row.reason}</div>
-<div class="divTableCell">${row.id}</div>
-<div class="divTableCell">${row.artist}</div>
-<div class="divTableCell">${row.title}</div>
+<div class="divTableCell">${row.reason}</div>`
+          html += song_id_2_html(row.id)
+          html += artist_2_html(row.artist)
+          html += `<div class="divTableCell">${row.title}</div>
 <div class="divTableCell">${row.date}</div>
 </div>`
 
@@ -164,6 +203,7 @@ sql = "select concat(left(year,3),'0') 'Decade', count(*) count from history whe
 html = `<div class="bigbox fixed">
 <div id="main_inner" class="fixed">
 <div class='post' align='center'>
+<h2>Number of tracks by Decade</h2>
 <div class="divTable blueTable">
 <div class="divTableHeading">
 <div class="divTableRow">`
@@ -195,7 +235,7 @@ Object.keys(rows).forEach((key) => {
 //---------------------------------------------------------------------------
 function top_tracks(db) {
 
-  sql = "select songID, title, artist, year, count(*) count from history where date_played < DATE_ADD(CURDATE(), INTERVAL -7 day) and active and song_type=0 group by songID order by count desc limit 20"
+  sql = "select songID, artist, title, year, count(*) count from history where date_played < DATE_ADD(CURDATE(), INTERVAL -7 day) and active and song_type=0 group by songID order by count desc limit 20"
 
   return new Promise((result, reject) => {
     db.query(sql, (error, rows, cols) => {
@@ -205,27 +245,28 @@ function top_tracks(db) {
       } else {html = `<div class="bigbox fixed">
 <div id="main_inner" class="fixed">
 <div class='post' align='center'>
+<h2>Top tracks played in last 7 days</h2>
 <div class="divTable blueTable">
 <div class="divTableHeading">
 <div class="divTableRow">`
 
-cols.forEach((d) => {
-  html = html + '<div class="divTableHead">' + d.name + '</div>'
-})
-  html += '</div></div>'
-html += `<div class="divTableBody">`
+      cols.forEach((d) => {
+        html = html + '<div class="divTableHead">' + d.name + '</div>'
+      })
+      html += '</div></div>'
+      html += `<div class="divTableBody">`
 
-Object.keys(rows).forEach((key) => {
-  row = rows[key]
-  html += `<div class="divTableRow">
-<div class="divTableCell">${row.songID}</div>
-<div class="divTableCell">${row.artist}</div>
-<div class="divTableCell">${row.title}</div>
+      Object.keys(rows).forEach((key) => {
+        row = rows[key]
+        html += `<div class="divTableRow">`
+        html += song_id_2_html(row.songID)
+        html += artist_2_html(row.artist)
+        html += `<div class="divTableCell">${row.title}</div>
 <div class="divTableCell">${row.year}</div>
 <div class="divTableCell" align="center">${row.count}</div>
 </div>`
 
-})
+      })
         result(html)
       }
     });
